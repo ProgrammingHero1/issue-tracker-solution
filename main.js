@@ -17,22 +17,52 @@ function submitIssue(e) {
   localStorage.setItem('issues', JSON.stringify(issues));
 
   document.getElementById('issueInputForm').reset();
+  totalIssue();
+  totalOpenIssue();
   fetchIssues();
   e.preventDefault();
 }
 
-const closeIssue = id => {
+const totalIssue = () => {
+    const issues = JSON.parse(localStorage.getItem('issues')) || [];
+    document.getElementById("total-issue").innerHTML=issues.length;
+}
+totalIssue();
+
+const totalOpenIssue = () => {
+  let openIsssue = 0;
+  const issues = JSON.parse(localStorage.getItem('issues')) || [];
+  issues.forEach(element => {
+    if(element.status === "Open") {
+      openIsssue +=1
+    }
+    
+  });
+  document.getElementById("total-open-issue").innerHTML=openIsssue;
+}
+
+totalOpenIssue();
+
+const setStatusClosed = (event ,id) => {
+  event.preventDefault();
   const issues = JSON.parse(localStorage.getItem('issues'));
-  const currentIssue = issues.find(issue => issue.id === id);
+  const currentIssue = issues.find(issue => issue.id == id);
+  console.log("currentIssue",currentIssue);
   currentIssue.status = 'Closed';
   localStorage.setItem('issues', JSON.stringify(issues));
   fetchIssues();
+  totalOpenIssue();
+  document.getElementById(`issue-title-${id}`).style.textDecoration = "line-through";
 }
 
-const deleteIssue = id => {
+const deleteIssue = (event, id) => {
+  event.preventDefault();
   const issues = JSON.parse(localStorage.getItem('issues'));
-  const remainingIssues = issues.filter( issue.id !== id )
+  const remainingIssues = issues.filter(issue => issue.id != id )
+  document.getElementById(`issue-card-${id}`).style.display = "none";
   localStorage.setItem('issues', JSON.stringify(remainingIssues));
+  totalIssue();
+  totalOpenIssue();
 }
 
 const fetchIssues = () => {
@@ -43,14 +73,14 @@ const fetchIssues = () => {
   for (var i = 0; i < issues.length; i++) {
     const {id, description, severity, assignedTo, status} = issues[i];
 
-    issuesList.innerHTML +=   `<div class="well">
+    issuesList.innerHTML +=   `<div id="issue-card-${id}" class="well">
                               <h6>Issue ID: ${id} </h6>
                               <p><span class="label label-info"> ${status} </span></p>
-                              <h3> ${description} </h3>
+                              <h3 id="issue-title-${id}"> ${description} </h3>
                               <p><span class="glyphicon glyphicon-time"></span> ${severity}</p>
                               <p><span class="glyphicon glyphicon-user"></span> ${assignedTo}</p>
-                              <a href="#" onclick="setStatusClosed(${id})" class="btn btn-warning">Close</a>
-                              <a href="#" onclick="deleteIssue(${id})" class="btn btn-danger">Delete</a>
+                              <a href="#" onclick="setStatusClosed(event, ${id})" class="btn btn-warning">Close</a>
+                              <a href="#" onclick="deleteIssue(event, ${id})" class="btn btn-danger">Delete</a>
                               </div>`;
   }
 }
